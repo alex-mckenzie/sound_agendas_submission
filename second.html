@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html >
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="style.css">
+
+  <title>part two</title>
+    
+</head>
+
+<body>
+
+    <div id="container"></div>
+    <div id="info"><a href="index.html" rel="noopener">home</a> / / <a href="first.html" rel="noopener">part one</a> / / <a href="second.html" rel="noopener">part two</a> / / <a href="audio.html" rel="noopener">audio</a></div>
+    
+    <div id="container"></div>
+    
+    	<script src="js/three.js"></script>
+		<script src="js/FirstPersonControls.js"></script>
+		<script src="js/Detector.js"></script>
+        <script src="js/OBJLoader.js"></script>
+        <script src="js/ShadowMapViewer.js"></script>
+        <script src="js/UnpackDepthRGBAShader.js"></script>
+        <script src ="js/threex.videotexture.js"></script>
+    
+		<script>
+        			
+            if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
+
+			var container;
+			var camera, controls, scene, renderer;
+			var light, pointLight;
+
+			var mesh;
+			var material_sphere1;
+
+			var analyser1, analyser2, analyser3;
+
+            var SHADOW_MAP_WIDTH = 2048, SHADOW_MAP_HEIGHT = 1024;
+            var HUD_MARGIN = 0.05;
+			var showHUD = false;
+
+
+			var clock = new THREE.Clock();
+
+			init();
+			animate();
+
+			function init() {
+
+				container = document.getElementById( 'container' );
+                
+                // camera, lights, scene
+
+				camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 1, 10000 );
+				camera.position.set( 0, 25, 0 );
+
+				var listener = new THREE.AudioListener();
+				camera.add( listener );
+
+				scene = new THREE.Scene();
+				scene.fog = new THREE.FogExp2( 0xD3D3D3, 0.0025 );
+                
+				var ambient = new THREE.AmbientLight( 0x444444 );
+				scene.add( ambient );
+
+				light = new THREE.SpotLight( 0xffffff, 1, 0, Math.PI / 2 );
+				light.position.set( 0, 1500, 1000 );
+				light.target.position.set( 0, 0, 0 );
+
+				light.castShadow = true;
+
+				light.shadow = new THREE.LightShadow( new THREE.PerspectiveCamera( 50, 1, 1200, 2500 ) );
+				light.shadow.bias = 0.0001;
+
+				light.shadow.mapSize.width = SHADOW_MAP_WIDTH;
+				light.shadow.mapSize.height = SHADOW_MAP_HEIGHT;
+
+				scene.add( light );
+
+                // sounds
+                
+                var audioLoader = new THREE.AudioLoader();
+
+                var sound1 = new THREE.PositionalAudio( listener );
+				audioLoader.load( 'sounds/walking_stones.wav', function( buffer ) {
+					sound1.setBuffer( buffer );
+					sound1.setLoop(true);
+                    sound1.setVolume(1);
+					sound1.setRefDistance( 20 );
+					sound1.play();
+				});
+                
+				var sound2 = new THREE.PositionalAudio( listener );
+				audioLoader.load( 'sounds/lighthouse_wind.wav', function( buffer ) {
+					sound2.setBuffer( buffer );
+                    sound2.setLoop(true);
+                    sound2.setVolume(1);
+
+					sound2.setRefDistance( 20 );
+					sound2.play();
+				});
+
+                var sound3 = new THREE.PositionalAudio( listener );
+				audioLoader.load( 'sounds/tambourine.wav', function( buffer ) {
+					sound3.setBuffer( buffer );
+                    sound3.setLoop(true);
+                    sound3.setVolume(0.03);
+
+					sound3.setRefDistance( 20 );
+					sound3.play();
+				});
+
+                var sound4 = new THREE.PositionalAudio( listener );
+				audioLoader.load( 'sounds/cymbal.wav', function( buffer ) {
+					sound4.setBuffer( buffer );
+                    sound4.setLoop(true);
+                    sound4.setVolume(0.5);
+
+					sound4.setRefDistance( 20 );
+					sound4.play();
+				});
+                
+                  var sound5 = new THREE.PositionalAudio( listener );
+				audioLoader.load( 'sounds/saxophone_1.wav', function( buffer ) {
+					sound5.setBuffer( buffer );
+                    sound5.setLoop(true);
+                    sound5.setVolume(0.3);
+
+					sound5.setRefDistance( 20 );
+					sound5.play();
+				});
+                
+                 var sound6 = new THREE.PositionalAudio( listener );
+				audioLoader.load( 'sounds/saxophone_2.wav', function( buffer ) {
+					sound6.setBuffer( buffer );
+                    sound6.setLoop(true);
+                    sound6.setVolume(0.3);
+
+					sound6.setRefDistance( 20 );
+					sound6.play();
+				});
+                
+                var sound7 = new THREE.PositionalAudio( listener );
+				audioLoader.load( 'sounds/saxophone_multiphonic.wav', function( buffer ) {
+					sound7.setBuffer( buffer );
+                    sound7.setLoop(true);
+                    sound7.setVolume(0.1);
+
+					sound7.setRefDistance( 20 );
+					sound7.play();
+				});
+                
+                var sound8 = new THREE.PositionalAudio( listener );
+				audioLoader.load( 'sounds/lighthouse_wind.wav', function( buffer ) {
+					sound8.setBuffer( buffer );
+                    sound8.setLoop(true);
+                    sound8.setVolume(1);
+
+					sound8.setRefDistance( 20 );
+					sound8.play();
+				});
+
+				// global ambient audio
+
+//				var soundglobal = new THREE.Audio( listener );
+//				audioLoader.load( 'media/birds.wav', function( buffer ) {
+//					soundglobal.setBuffer( buffer );
+//					soundglobal.setLoop(true);
+//					soundglobal.setVolume(0.01);
+//					soundglobal.play();
+//				});
+//                
+          
+               var texture = new THREE.TextureLoader().load( 'media/stone.jpg' );
+
+               				var material = new THREE.MeshBasicMaterial( { map: texture } );
+;
+
+    
+    var geometry = new THREE.BoxGeometry(50, 50, 50);
+    geometry.computeLineDistances();
+    var mesh = new THREE.Mesh(geometry, material);
+    mesh.position.z = -150;
+    mesh.position.x = 150;
+    mesh.position.y = 25;
+    mesh.add( sound2 );
+    scene.add(mesh);
+                
+    var geometry2 = new THREE.BoxGeometry(50, 50, 50);
+    geometry2.computeLineDistances();
+    var mesh2 = new THREE.Mesh(geometry2, material);
+    mesh2.position.z = 150;
+    mesh2.position.x = 150;
+    mesh2.position.y = 25;
+    mesh2.add( sound1 );
+    scene.add(mesh2);
+                
+                
+    var geometry3 = new THREE.BoxGeometry(50, 50, 50);
+    geometry3.computeLineDistances();
+    var mesh3 = new THREE.Mesh(geometry3, material);
+    mesh3.position.z = 0;
+    mesh3.position.x = -150;
+    mesh3.position.y = 25;
+    mesh3.add( sound3 );
+    scene.add(mesh3);     
+                
+    var geometry4 = new THREE.BoxGeometry(50, 50, 50);
+    geometry4.computeLineDistances();
+    var mesh4 = new THREE.Mesh(geometry4, material);
+    mesh4.position.z = 0;
+    mesh4.position.x = 450;
+    mesh4.position.y = 25;
+    mesh4.add( sound4 );
+    scene.add(mesh4);  
+                
+    var geometry5 = new THREE.BoxGeometry(50, 50, 50);
+    geometry5.computeLineDistances();
+    var mesh5 = new THREE.Mesh(geometry5, material);
+    mesh5.position.z = 200;
+    mesh5.position.x = 800;
+    mesh5.position.y = 25;
+    mesh5.add( sound5 );
+    scene.add(mesh5); 
+                
+    var geometry6 = new THREE.BoxGeometry(50, 50, 50);
+    geometry6.computeLineDistances();
+    var mesh6 = new THREE.Mesh(geometry6, material);
+    mesh6.position.z = -200;
+    mesh6.position.x = 800;
+    mesh6.position.y = 25;
+    mesh6.add( sound6 );
+    scene.add(mesh6);   
+                
+                var geometry7 = new THREE.BoxGeometry(50, 50, 50);
+    geometry7.computeLineDistances();
+    var mesh7 = new THREE.Mesh(geometry7, material);
+    mesh7.position.z = 0;
+    mesh7.position.x = 1800;
+    mesh7.position.y = 25;
+    mesh7.add( sound7 );
+    scene.add(mesh7); 
+                
+                  var geometry8 = new THREE.BoxGeometry(50, 50, 50);
+    geometry8.computeLineDistances();
+    var mesh8 = new THREE.Mesh(geometry8, material);
+    mesh8.position.z = 0;
+    mesh8.position.x = 1200;
+    mesh8.position.y = 25;
+    mesh8.add( sound8 );
+    scene.add(mesh8); 
+                
+// background 
+                
+//                var textureCube = new THREE.CubeTextureLoader()
+//					.setPath( 'media/')
+//					.load( [ 'sky.jpg', 'sky.jpg', 'sky.jpg', 'sky.jpg', 'sky.jpg', 'sky.jpg' ] );
+//				scene.background = textureCube;
+     
+				// ground
+                
+            var ground = new THREE.TextureLoader().load("media/stone.jpg");
+	       ground.wrapS = ground.wrapT = THREE.RepeatWrapping;
+	       ground.repeat.set(10,10);
+	       var ground = new THREE.Mesh( new THREE.CubeGeometry(5000,50,5000),
+		  new THREE.MeshBasicMaterial({
+               map: ground
+		              }) 
+	       );
+	   ground.position.set(0,-20,0);
+                ground.receiveShadow = true;
+	   scene.add(ground);
+                
+                //
+    
+				renderer = new THREE.WebGLRenderer( { antialias: true } );
+                render.shadowMapEnabled = true;
+                render.shadowMapType = THREE.PCFSoftShadowMap;
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+				container.innerHTML = "";
+				container.appendChild( renderer.domElement );
+
+				//
+				
+                                
+                // controls
+                
+                controls = new THREE.FirstPersonControls( camera, renderer.domElement );
+
+				controls.movementSpeed = 40;
+				controls.lookSpeed = 0.08;
+				controls.noFly = true;
+				controls.lookVertical = false;
+
+
+
+				window.addEventListener( 'resize', onWindowResize, false );
+
+			}
+
+			function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+				controls.handleResize();
+
+			}
+
+			function animate() {
+
+				requestAnimationFrame( animate );
+				render();
+
+			}
+
+
+			function render() {
+                
+				var delta = clock.getDelta();
+
+				controls.update( delta );
+                renderer.setClearColor( 0xD3D3D3 );
+				renderer.render( scene, camera );
+
+			}
+
+        
+        </script>
+        
+	
+</body>
+</html>
